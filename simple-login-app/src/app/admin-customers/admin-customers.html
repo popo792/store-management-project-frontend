@@ -1,0 +1,160 @@
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #f8f9fa; border-bottom: 1px solid #ccc; margin-bottom: 20px;">
+  <h2 style="margin: 0;">Admin Dashboard</h2>
+  <button (click)="logout()" style="background-color: #343a40; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+    Logout
+  </button>
+</div>
+
+<div style="display: flex; gap: 20px; padding: 20px; font-family: Arial, sans-serif; align-items: flex-start; flex-wrap: wrap;">
+
+  <div style="flex: 1; min-width: 250px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #fff;">
+    <h3 style="margin-top: 0;">Workforce Directory</h3>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li *ngFor="let unit of staffMatrix" 
+          (click)="engageTarget(unit)"
+          style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;"
+          [style.background-color]="activeOperative?.id === unit.id ? '#e9ecef' : 'transparent'">
+        <strong>ID: {{unit.id}}</strong> | User: {{unit.name}}
+      </li>
+      <li *ngIf="staffMatrix.length === 0" style="padding: 10px; color: gray;">
+        No personnel found.
+      </li>
+    </ul>
+  </div>
+
+  <div style="flex: 2; min-width: 350px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #fff;">
+    <div *ngIf="!activeOperative" style="text-align: center; color: #666; padding: 40px 0;">
+      Select personnel from the directory to view their processing history.
+    </div>
+    <div *ngIf="activeOperative">
+      <h3 style="margin-top: 0;">Orders processed by: {{activeOperative.name}}</h3>
+      <ul style="list-style: none; padding: 0; margin: 0;">
+        <li *ngFor="let log of transactionLedger" style="padding: 15px; border: 1px solid #dee2e6; margin-bottom: 15px; background-color: #fdfdfd; border-radius: 6px;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+            <span style="font-size: 16px; font-weight: bold; color: #0056b3;">Transaction ID: {{log.id}}</span>
+            <span style="color: #6c757d; font-size: 14px;">{{log.orderDate | date:'medium'}}</span>
+          </div>
+          <div style="margin-bottom: 15px; padding-left: 10px; border-left: 3px solid #28a745;">
+            <strong style="display: block; margin-bottom: 3px;">Client Profile:</strong>
+            <span style="font-size: 15px;">{{log.customer?.name}}</span><br>
+            <span style="color: gray; font-size: 13px;">{{log.customer?.email}}</span>
+          </div>
+          <strong style="display: block; margin-bottom: 8px;">Acquired Inventory:</strong>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f1f3f5; border-bottom: 2px solid #dee2e6;">
+                <th style="padding: 8px; text-align: left; font-size: 14px; color: #495057;">Designation</th>
+                <th style="padding: 8px; text-align: right; font-size: 14px; color: #495057;">Exchange Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let asset of log.items" style="border-bottom: 1px solid #f1f3f5;">
+                <td style="padding: 8px; font-size: 14px; color: #212529;">{{asset.name}}</td>
+                <td style="padding: 8px; text-align: right; font-size: 14px; color: #212529;">{{asset.price | currency}}</td>
+              </tr>
+              <tr *ngIf="log.items?.length === 0">
+                <td colspan="2" style="padding: 15px; text-align: center; color: #adb5bd; font-style: italic;">No inventory found.</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td style="padding: 8px; text-align: right; font-weight: bold; font-size: 14px; color: #212529; border-top: 2px solid #dee2e6;">Total Price:</td>
+                <td style="padding: 8px; text-align: right; font-weight: bold; font-size: 14px; color: #212529; border-top: 2px solid #dee2e6;">
+                  {{ log.totalValue !== undefined ? (log.totalValue | currency) : 'Calculating...' }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </li>
+        <li *ngIf="transactionLedger.length === 0" style="padding: 20px; text-align: center; color: #6c757d; font-size: 15px;">
+          No history recorded for this personnel.
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-width: 250px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #fff;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="margin: 0;">Master Inventory</h3>
+      <button (click)="toggleAddForm()" style="background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">
+        + Add Item
+      </button>
+    </div>
+
+    <div *ngIf="showAddForm" style="background-color: #e9ecef; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ced4da;">
+      <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #495057;">New Product</h4>
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 12px; font-weight: bold;">Name:</label>
+        <input type="text" [(ngModel)]="newProduct.name" style="width: 100%; padding: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+      </div>
+      <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+        <div style="flex: 1;">
+          <label style="font-size: 12px; font-weight: bold;">Price ($):</label>
+          <input type="number" [(ngModel)]="newProduct.price" style="width: 100%; padding: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 12px; font-weight: bold;">Stock:</label>
+          <input type="number" [(ngModel)]="newProduct.stockQty" style="width: 100%; padding: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button (click)="addProduct()" style="flex: 1; background-color: #28a745; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer;">Save</button>
+        <button (click)="toggleAddForm()" style="flex: 1; background-color: #6c757d; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer;">Cancel</button>
+      </div>
+    </div>
+
+    <div *ngFor="let product of products" style="padding: 15px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 10px;">
+      
+      <div *ngIf="editingProduct?.id !== product.id">
+        <strong>{{product.name}}</strong>
+        <p style="margin: 5px 0;">Price: ${{product.price}} | Stock: {{product.stockQty}}</p>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button (click)="startEditing(product)" style="flex: 1; background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+            Edit
+          </button>
+          <button (click)="deleteProduct(product.id)" style="flex: 1; background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="editingProduct?.id === product.id" style="background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 12px; font-weight: bold;">Name:</label>
+          <input type="text" [(ngModel)]="editingProduct.name" style="width: 100%; padding: 5px; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight: bold;">Price ($):</label>
+            <input type="number" [(ngModel)]="editingProduct.price" style="width: 100%; padding: 5px; box-sizing: border-box;">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight: bold;">Stock:</label>
+            <input type="number" [(ngModel)]="editingProduct.stockQty" style="width: 100%; padding: 5px; box-sizing: border-box;">
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button (click)="saveProduct()" style="flex: 1; background-color: #28a745; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer;">Save</button>
+          <button (click)="cancelEditing()" style="flex: 1; background-color: #6c757d; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer;">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-width: 250px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #fff;">
+    <h3 style="margin-top: 0;">Cashier Performance</h3>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li *ngFor="let cashier of cashiers" style="padding: 12px; border-bottom: 1px solid #eee;">
+        <strong>ID: {{cashier.cashierId}}</strong> | {{cashier.cashierName}}
+        <br>
+        <span style="color: #28a745; font-weight: bold;">Total Profit: ${{cashier.totalProfit}}</span>
+      </li>
+      <li *ngIf="cashiers.length === 0" style="padding: 10px; color: gray;">
+        No cashier records found.
+      </li>
+    </ul>
+  </div>
+
+</div>
